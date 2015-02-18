@@ -1,5 +1,7 @@
 #PHP Forger
 
+(works in PHP >= 5.4)
+
 A simple text template to mix text and logic blocks to generate php files (or anytype of text files).
 
 use (make sure that the php path is in your PATH environment variable)
