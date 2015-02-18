@@ -18,7 +18,7 @@ Example:
 
 #Templating
 
-You can gen your PHP with PHP
+You can generate your PHP with PHP
 
 ```php
 <?php
