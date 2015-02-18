@@ -32,7 +32,7 @@ You can gen your PHP with PHP
     //do something
   }
 
-<+ foreach($props as $prop){ +>
+<+ foreach($props as $prop){  //foreach in template +>
   public $<+=$prop+>;
 <+ } +>
 
