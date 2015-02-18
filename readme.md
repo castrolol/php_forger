@@ -12,3 +12,56 @@ Example:
   ```shell
   php -f gen.php get/myProjectWeb
 ```
+
+
+#Templating
+
+You can gen your PHP with PHP
+
+```php
+<?php
+  class Foo {
+<+
+  //starting the template
+  $props = array();
+  $props[] = "bar";
+  $props[] = "baz";
++>
+
+  function __construct(){
+    //do something
+  }
+
+<+ foreach($props as $prop){ +>
+  public $<+=$prop+>;
+<+ } +>
+
+
+?>
+
+```
+
+
+will genearte
+
+
+```php
+
+<?php
+  class Foo {
+
+
+  function __construct(){
+    //do something
+  }
+
+
+  public $bar;
+
+  public $baz;
+
+
+
+?>
+
+```
