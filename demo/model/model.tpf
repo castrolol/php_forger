@@ -1,0 +1,49 @@
+<+ 
+	//<?php
+	
+
+	require_once resolve_path("../database.php");
+
+	$stmt = $db->query("show tables");
+	$stmt->execute();
+	$rows = $stmt->fetchAll(PDO::FETCH_NUM);
+
+	foreach($rows as $row){
+
+
+		$table = $row[0];
+	
+		start_file("$table.php");
+
+		$stmt = $db->query("show COLUMNS from $table");
+		$stmt->execute();
+		$fields = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$key = "";
+
+		foreach($fields as $field){
+
+			if($field->Key == "PRI"){
+				$key = $field->Field;
+			}
+		}
+
+
++>
+
+<?php 
+
+	class <+=ucfirst($table)+> {
+
+		<+ foreach($fields as $field){ +>
+		public $<+=to_var_name($field->Field)+>;
+		<+ } +>
+
+	}
+
+?>
+
+<+
+
+}
+
++>

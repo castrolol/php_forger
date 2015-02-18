@@ -1,0 +1,216 @@
+<+ 
+	//<?php
+	
+
+	require_once resolve_path("../../database.php");
+
+	$stmt = $db->query("show tables");
+	$stmt->execute();
+	$rows = $stmt->fetchAll(PDO::FETCH_NUM);
+
+	foreach($rows as $row){
+
+
+		$table = $row[0];
+	
+		start_file("$table.php");
+
+		$stmt = $db->query("show COLUMNS from $table");
+		$stmt->execute();
+		$fields = $stmt->fetchAll(PDO::FETCH_OBJ);
+		$key = "";
+
+		foreach($fields as $field){
+
+			if($field->Key == "PRI"){
+				$key = $field->Field;
+			}
+		}
+
+
+
++>
+
+
+<?php
+
+	include_once "database.php";  
+	include_once "model/<+=$table+>.php";  
+  
+	//repository for <+=$table+> Table
+	class <+=ucfirst($table)+>Repository {
+
+		private $_table;
+		private $_key;
+
+		function __construct(){
+
+
+
+			$this->_table = "<+=$table+>";
+			$this->_key ="<+=$key+>";
+
+		}
+
+		function createModel($data = ""){
+
+			$model = new <+=ucfirst($table)+>();
+
+			if(!empty($data)){
+
+			<+ foreach($fields as $field){ +>
+				 
+				$model-><+=to_var_name($field->Field)+> = $data-><+=to_var_name($field->Field)+>;
+				
+			<+ } +>
+			
+			}
+
+
+			return $model;			
+
+		}
+			 
+
+		function get($where = "", $params = []){
+
+			global $db;
+
+			$query = "SELECT * FROM {$this->_table}";
+
+
+			if(!empty($where)){
+
+				$query .= " where " . $where;
+			}
+
+			$stmt = $db->prepare($query);
+
+			foreach($params as $param => &$value){
+
+				$stmt->bindParam(":" . $param, $value);
+
+			}
+ 			
+ 			$stmt->execute();
+
+			$rows =  $stmt->fetchAll(PDO::FETCH_OBJ);
+
+			$retorno = array();
+
+			foreach($rows as $row){
+				$retorno[] = $this->createModel($row);
+			}
+
+			return $retorno;
+
+		}
+
+		function get_by_key($key){
+
+			
+
+
+			global $db;
+
+			$query = "SELECT * FROM {$this->_table} WHERE `{$this->_key}` = :key";
+ 		 
+			$stmt = $db->prepare($query);
+
+			 
+			$stmt->bindParam(":key", $key);
+ 			
+ 			$stmt->execute();
+
+			$rows =  $stmt->fetchAll(PDO::FETCH_OBJ);
+			
+			foreach($rows as $row){				
+				return  $this->createModel($row);
+			}
+
+		}
+
+		function insert($model){
+
+			global $db;
+
+			<+
+			$field_names = array();
+			foreach($fields as $field){
+				if($field->Extra != "auto_increment"){
+					$field_names[] = to_var_name($field->Field);
+				}
+			}			
+			+>
+			$query = 'INSERT INTO  <+=$table+> 
+									( `<+=implode($field_names, "` , `")+>` )
+							values 	( :<+=implode($field_names, " , :")+>)';
+ 
+			
+		 
+			
+			$stmt = $db->prepare($query);
+
+	 
+			<+foreach($field_names as $field){ +>
+			$stmt->bindParam('<+=":" . $field+>', $model-><+=$field+>);
+			<+}+>			
+
+			return $stmt->execute();
+
+		}
+
+		function update($<+=to_var_name($table)+>){
+
+			global $db;
+
+			<+
+			$field_names = array(); 
+
+			foreach($fields as $field){				
+				if($field->Field == $key) continue;				
+
+				$varname = to_var_name($field->Field);
+				$field_names[] = '`' . $field->Field .  "` = :" . $varname  ;
+				
+			}
+			if(empty($key)){
+			+>
+			throw new Exception("Table `<+=$table+>` don't have primary key.");
+			<+
+			}else{		
+			+>
+			$query = 'UPDATE <+=$table+>  
+						 SET 
+							<+=implode($field_names, " ,
+							")+>
+					   WHERE 
+					   		`<+=$key+>` = :<+=to_var_name($key)+>';
+  
+		 
+			
+			$stmt = $db->prepare($query);
+
+	 
+			<+foreach($fields as $field){ +>
+			$stmt->bindParam(':<+=to_var_name($field->Field)+>', $<+=to_var_name($table)+>-><+=$field->Field+>);
+			<+}+>			
+
+			//key param (id)
+			$stmt->bindParam(":<+=to_var_name($key)+>",  $<+=to_var_name($table)+>-><+=$key+>);
+
+			return $stmt->execute();
+			<+ } +>
+		}
+
+	}
+
+	
+?>
+
+
+<+
+
+}
+
++>

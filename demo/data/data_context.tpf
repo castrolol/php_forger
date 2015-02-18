@@ -1,0 +1,70 @@
+<+ 
+	//<?php
+	
+
+	require_once resolve_path("../database.php");
+
+	$stmt = $db->query("show tables");
+	$stmt->execute();
+	$rows = $stmt->fetchAll(PDO::FETCH_NUM);
+	$tables = array();
+
+	foreach($rows as $row){
+
+
+		$tables[] = $row[0];
+	 
+	 
+	}
+
+
++>
+
+
+<?php
+
+	include_once "database.php";
+	<+
+	foreach($tables as $table){
+  +>include_once "data/repository/<+=$table+>.php";
+	<+
+	}
+	+>
+	
+	
+
+
+	class DataContext {
+
+		function __construct(){
+
+			
+			 
+			 	 
+		<+
+		foreach($tables as $table){
+  		+>
+  		$this-><+=$table+> = new <+=ucfirst($table)+>Repository();	
+		<+
+		}
+		+>
+
+		}
+		
+		
+		<+
+		foreach($tables as $table){
+  		+>
+  		public $<+=$table+>;
+		<+
+		}
+		+>
+	 	
+				
+
+	}
+
+
+	$ctx = new DataContext();
+
+?>
